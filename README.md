@@ -10,5 +10,3 @@
   - final project: k-means clustering of real world data, provided by the world factbook of the CIA
 - Algorithm and data structures:
   - final project: line breaking algorithm of a paragraph with penalties (dynamic programming)
-- Dynamic websites with php and MariaDB
-  - final project: a online book store that uses php, mySQL and html. users can maintain and order books
