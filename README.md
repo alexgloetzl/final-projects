@@ -1,4 +1,4 @@
-# final_projects
+# History
 **Winter term WS20/21:**
 - Introduction to python:
   - final project: repeated integration of a function with Romberg's method by interpolation
@@ -12,3 +12,7 @@
   - final project: line breaking algorithm of a paragraph with penalties (dynamic programming)
 - Dynamic websites with php and MariaDB
   - final project: an online book store that uses php, mySQL and html. users can maintain and order books
+
+**Winter term WS21/22:**
+- Genomics and Bioinformatics II:
+  - weekly reports: statistics and machine learning on gene expression microarrays
