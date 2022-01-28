@@ -1,0 +1,113 @@
+---
+title: Simulation exercise in<br />**Genomik und Bioinformatik**
+output: html_document
+---
+
+```{r simulation_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=5, fig.height=5, fig.path='RmdFigs/', dpi=72,
+               warning=FALSE, message=FALSE, prompt=TRUE, cache=FALSE)
+set.seed(53079239)
+```
+
+Part D
+-----------------------------
+**Learning objectives:**Scaling of genes in expression matrices for visualization
+Load the tle _geneExpressionData.rda_ in an R session to and, interprete and visualize a matrix of microarray gene expression data measured from lymphoma patients.
+
+**Question (a):** In which object can you nd the matrix? How many rows and columns are in this matrix?
+What do columns and rows correspond to? Explain your answers. Hint: the matrix is
+extracted from the GEO dataset GSE4475 treated in exercise B of assignment 4.
+
+```{r Da}
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt5/geneExpressionData.rda")
+genes <- geneExpressionData
+str(genes)
+dim(genes)
+```
+**Answer:** _geneExpressionData_ is just a matrix with 137 rows and 135 columns. The rows and columns present genes and samples respectively.
+
+**Question (b):** Visualize the gene expression matrix using the command `image`. How can you make sure
+that the rows of the matrix are horizontal and the columns are vertical? How can you
+show names of genes at the right axis and names of samples at the bottom axis instead of
+the default labeling? Which color represents high expression, which color low expression?
+Describe your most striking observation.
+
+```{r Db, out.width = "100%"}
+x_axis <- dim(genes)[1]
+y_axis <- dim(genes)[2]
+genes_rot <- t(genes)[,nrow(genes):1]
+par(mar=c(3,1,1,5))
+image(1:y_axis, 1:x_axis, genes_rot, axes=FALSE, xlab="", ylab="") 
+axis(side=4, at = 1:x_axis, labels=rev(rownames(genes)),las=2,tick=FALSE,cex.axis=0.5)
+axis(side=1, at = 1:y_axis, labels=colnames(genes),las=2,tick=FALSE,cex.axis=0.5)
+```
+
+**Answer:** Since `image` is filling the matrix rowwise from bottom left to top left, we have to improvise by first transposing our matrix and then reverse the order of our new columns. This methode can be exercised with a much smaller and managable matrix to check if everything works as intended.
+With `side` the position of the axis labels can be chosen. The darker the color red, the higher expressed this gene is. Yellow is therefore less expressed. There seems to be already a barely visible cluster forming around sample "MPI-008".
+
+**Question (c):** For each gene expression value, subtract the mean expression of that gene across all samples.
+What do you observe now looking at the expression matrix?
+
+```{r Dc, out.width = "100%"}
+genes_shift <- t(apply(genes, 1, function(x) x-mean(x)))
+genes_shift_rot <- t(genes_shift)[,nrow(genes_shift):1]
+
+par(mar=c(3,1,1,5))
+image(1:y_axis, 1:x_axis, genes_shift_rot, axes=FALSE, xlab="", ylab="")
+axis(4, at = 1:x_axis, labels=rev(rownames(genes)),las=2,tick=FALSE,cex.axis=0.5)
+axis(1, at = 1:y_axis, labels=colnames(genes),las=2,tick=FALSE,cex.axis=0.5)
+```
+
+**Answer:** The matrix is now clearly divided into four quadrants.
+
+**Question (d):** In addition, divide all values in a row by its standard deviation. Does this still sharpen the
+picture? Are there distinct groups of samples? If yes, how many different groups do you see
+and how many samples are attributed to each group? What about the genes, do they form
+clusters? How large are they?
+
+```{r Dd, out.width = "100%"}
+genes_shift_sd <- t(apply(genes_shift, 1, function(x) x/sd(x))) 
+genes_shift_sd_rot <- t(genes_shift_sd)[,nrow(genes_shift_sd):1]
+
+par(mar=c(3,1,1,5))
+image(1:y_axis, 1:x_axis, genes_shift_sd_rot, axes=FALSE, xlab="", ylab="")
+axis(4, at = 1:x_axis, labels=rev(rownames(genes)),las=2,tick=FALSE,cex.axis=0.5)
+axis(1, at = 1:y_axis, labels=colnames(genes),las=2,tick=FALSE,cex.axis=0.5)
+
+samples_group <- which(genes_shift_sd==genes_shift_sd[1,"MPI-008"])%/%nrow(genes_shift_sd)
+samples_group
+gene_group <- which(genes_shift_sd==genes_shift_sd["219550_at",1])
+gene_group
+```
+**Answer:** Yes, it does sharpen the picture. The matrix is vertically divided in two seperate sample groups, where the first group goes approximately to "MPI-008", which is 41 columns _long_. The other group is therefore 135-40=95 _long_. The gene border is around gene "219550_at", which is 56 rows from the top. So the lower half of the two gene groups is 137-56=81 rows _long_.
+
+**Question (e):** What is helpful and what is wrong with the call:
+`geneExpressionData <- scale(geneExpressionData)`
+Fix the call in order to obtain the same result as the programming in sections (c) and (d).
+
+```{r De, out.width = "100%"}
+scale_genes2 <- scale(t(genes)) 
+scale_genes_rot2 <- t(scale_genes2)[,nrow(scale_genes2):1]
+par(mar=c(3,1,1,5))
+image(1:x_axis, 1:y_axis, scale_genes_rot2, axes=FALSE, xlab="", ylab="", col = hcl.colors(10, "Cividis", rev = TRUE))
+axis(4, at = 1:x_axis, labels=rev(rownames(genes)),las=2,tick=FALSE,cex.axis=0.5)
+axis(1, at = 1:y_axis, labels=colnames(genes),las=2,tick=FALSE,cex.axis=0.5)
+```
+
+**Answer:** The function `scale` applies to columns. Since we want to apply it to rows we need to first transpose the matrix with `t()`.
+
+**Question (f):** Adapt the coloring of your image close to the color usage of the heatmap shown on slide 23 of the lecture's chapter on "Gene Expression".
+
+**Answer:** The function `hcl.pals()` shows all available color palettes. In `image` the color parameter can adjusted. Here "Cividis" was chosen as it was the closest that resembled the one given in the lecture. Palettes can also be inspected here: https://colorspace.r-forge.r-project.org/articles/hcl_palettes.html.
+
+Information about the used R and package versions
+-------------------------------------------------
+
+The used versions of R and packages to generate the report above are
+the following:
+
+```{r sessionInfo}
+sessionInfo()
+```
+

@@ -1,0 +1,128 @@
+---
+title: Simulation exercise in<br />**Genomik und Bioinformatik**
+output: html_document
+---
+
+```{r simulation_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=5, fig.height=5, fig.path='RmdFigs/', dpi=72,
+               warning=FALSE, message=FALSE, prompt=TRUE, cache=FALSE)
+```
+
+Part D) Programming - Classification with feature selection
+-----------------------------
+**1. Compute classifiers:**
+
+```{r D1, out.width = "70%"}
+library(glmnet)
+
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt11/split_lenz.rda")
+
+alpha1.fit <- 
+  glmnet(mat.train, pdat.train$risk, type.measure="mse", alpha=1, family="binomial")
+
+
+plot(alpha1.fit, label=TRUE) #vignette("glmnet", package="glmnet")
+
+
+```
+**Answer 1:**\
+The paramter _family_ was set to `binominal` since the phenoData consists only of two labels, namely 'high' and 'low'. \
+`plot()` showes the line plots for the 20.000 coefficients (one coefficient for each gene/feature) and their decline with increasing lambda. The top axis indicates the number of non-zero coefficients of the features. On the far left of the plot lambda is maximal, which results in a maximal regularization and thus all coefficients become zero (no non-zero coefficients).
+
+**2. Evaluate classifiers:**
+```{r D2, out.width = "60%"}
+alpha1.predicted <-
+  predict(alpha1.fit, newx=mat.val, type='class') #test data
+
+alpha2.predicted <-
+  predict(alpha1.fit, newx=mat.train, type='class') #training data
+
+print(alpha1.predicted[1:3,1:5]) #prediction for first three genes for five different lambdas
+
+#Error rates calculated for EACH classifier
+errors <- list(train_error = c(), test_error = c())
+for (lambda in 1:dim(alpha1.predicted)[2]){
+  
+  myError_te <- mean(pdat.val$risk != alpha1.predicted[, lambda]) #test
+  errors$test_error[lambda] <- myError_te
+  
+  myError_tr <- mean(pdat.train$risk != alpha2.predicted[, lambda]) #train
+  errors$train_error[lambda] <- myError_tr
+}
+
+lowest_error_test_ind <- order(errors$test_error, decreasing=FALSE)[1] #33
+print(paste("Smallest test error", round(errors$test_error[lowest_error_test_ind],4), "with lambda:", round(alpha1.fit$lambda[lowest_error_test_ind],4)))
+
+{plot(errors$train_error, col="red", ylab="error", xlab="lambda")
+points(errors$test_error, col="blue")
+legend("right", legend=c("train error", "test error"), col=c("red","blue"), pch=15, cex=0.8)
+abline(h=errors$test_error[lowest_error_test_ind], lty=2)
+abline(v=lowest_error_test_ind, lty=2)
+text(x = 52, y = 0.27, label = "lowest test error", cex=0.8)}
+
+
+print(paste("Error rate with only one non-zero coefficient:", round(errors$test_error[alpha1.fit$df == 1],4)))
+
+highest_df_index <- order(alpha1.fit$df, decreasing=TRUE)[1]
+highest_df <- alpha1.fit$df[highest_df_index]
+
+print(paste("Error rate for maximal nonzero coeff. (df=", highest_df,") :", round(min(errors$test_error[alpha1.fit$df == highest_df]),3)))
+```
+
+**Answer (2a):**\
+Error rate for one gene: \
+With only one coefficient/gene the fit model is not complex enough to fit the complex behavior expected from our gene data. It can therefore not divide/predict the classes well.
+Error rate for maximal number of features: \
+If too many coefficients/features are used to train our model, then we get a very good result for the training data but the model fails to learn the general underlying data and therefore cannot fit new data very well. This is called overfitting.
+
+```{r D3}
+#sensitivity <- "true positives/ (true positives+false negatives)"
+tp <- 0 #true positive
+fn <- 0 #false negative
+#specificity <- "true negatives/ (true negatives+false positives)"
+tn <- 0
+fp <- 0
+for (i in 1:(dim(alpha1.predicted)[1])){
+  
+  if (alpha1.predicted[i,lowest_error_test_ind] == "high"){
+    if (pdat.val$risk[i] == "high"){
+      tp <- tp + 1
+    } else {
+      fp <- fp + 1
+    }
+  }
+  else {
+    if (pdat.val$risk[i] == "high"){
+      fn <- fn + 1
+    } else {
+      tn <- tn +1
+    }
+  }
+}
+
+sensitivity <- tp/(tp+fn)
+specificity <- tn/(tn+fp)
+print(paste("Sensitivity:", round(sensitivity,3)))
+print(paste("Specificity:", round(specificity,3)))
+
+
+```
+**Answer (2b):**\
+The error rate does not explain where the error comes from. It could be both from false negatives or false positives. This is were sensitivity and specificity are more helpful. \
+Explanation of sensitivity and specificity on the example of a Corona test: \
+A test that is highly sensitive will flag almost everyone who has the disease and not generate many false-negative results. \
+A high-specificity test will correctly rule out almost everyone who doesn’t have the disease and won’t generate many false-positive results.
+
+Information about the used R and package versions
+-------------------------------------------------
+
+The used versions of R and packages to generate the report above are
+the following:
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+
+
