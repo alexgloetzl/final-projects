@@ -15,4 +15,4 @@
 
 **Winter term WS21/22:**
 - Genomics and Bioinformatics II:
-  - weekly reports: statistics and machine learning on gene expression microarrays
+  - weekly reports: statistics and machine learning on gene expression microarrays in R
