@@ -14,5 +14,7 @@
   - final project: an online book store that uses php, mySQL and html. users can maintain and order books
 
 **Winter term WS21/22:**
-- Genomics and Bioinformatics II:
+- Genomics and bioinformatics II:
   - weekly reports: statistics and machine learning on gene expression microarrays in R
+- Coursera machine learning class by Andrew Ng:
+  - weekly tests: building of ML algorithms in matlab with focus on linear algebra and vectorization
