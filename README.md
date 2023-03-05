@@ -24,3 +24,9 @@
   - final project: implementation of parallized program that solves poisson's equation through jacobi iteration (OMP+MPI)
 - Genomics and bioinformatics I:
   - weekly reports: DNA assembly and local sequence alignment algorithms
+- Practial bioinformatics I:
+  - Convolutional Neural Network with clinical data sets from the UKR
+
+**Summer term WS22/23:**
+- Microcontroller course:
+  - final project: infrared remote controlled car by Arduino written in C
