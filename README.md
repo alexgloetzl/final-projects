@@ -30,3 +30,11 @@
 **Summer term WS22/23:**
 - Microcontroller course:
   - final project: implementation of infrared remote controlled car by Arduino written in C
+- Algorithmic Bioinformatics seminar:
+  - 30 minute presentation about fuzzy C-mean clustering algorithm
+- Computational Metabolomics:
+  - 10 minute presentation about oversampling and class imbalance
+
+**Summer term SS23:**
+- Statistic Bioinformatics seminar:
+  - 30 minute presentation about adjusting for batch bias with the Distance Weighted Discriminant algorithm
