@@ -1,0 +1,134 @@
+---
+title: Simulation exercise in<br />**Genomik und Bioinformatik**
+output: html_document
+---
+
+```{r simulation_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=5, fig.height=5, fig.path='RmdFigs/', dpi=72,
+               warning=FALSE, message=FALSE, prompt=TRUE, cache=FALSE)
+```
+
+Part D) Programming - Differential gene expression analysis
+-----------------------------
+**1. Determine the distribution of p-values based on t-tests:**
+
+```{r D1, out.width = "70%"}
+library(affy)
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt9/mmml_vsn.rda")
+
+myData <- exprs(mmml.vsn)
+myPheno <- pData(mmml.vsn)
+
+abc_index <- which(myPheno$GCBABC == "ABC")
+gcb_index <- which(myPheno$GCBABC == "GCB")
+
+myList = list(t_score=c(), p_value=c())
+
+for (i in 1:dim(myData)[1]) {
+  abc_samples <- myData[i,abc_index]
+  gcb_samples <- myData[i,gcb_index]
+  result <- t.test(abc_samples, gcb_samples) #TWO-SIDED-TEST 
+  myList$t_score[i] <- result$statistic
+  myList$p_value[i] <- result$p.value
+}
+
+#contains all the p-value for every gene (for gcb & abc comparison)
+str(myList$p_value) 
+
+#histogram
+hist(myList$p_value, xlab="p-values", main="Histogram der p-Werte\n für den ABC & GCB Vergleich")
+
+p_value_below <- which(myList$p_value < 0.05)
+print(paste("Anzahl an Genen unter p=0.05:",length(p_value_below)))
+```
+**Answer (1b) & (1c):**\
+In a random p-value distribution the p-values would be distributed uniformly (without a big peak) \
+In our data we have `r length(p_value_below)` genes with p-value below 0.05. In a random distribution we would expect 0.05* _number of genes_ = 0.05* `r dim(myData)[1]` =`r 0.05* dim(myData)[1]`. This number is much smaller than our genes with p-value smaller than 0.05 because we have not applied the Bonferroni-correction yet.
+
+**2. Correct p-values for multiple testing:**
+```{r D2}
+p_value_below_corrected <- which(myList$p_value < 0.05/dim(myData)[1])
+print(paste("Anzahl an Genen unter dem mit Bon. korrigierten p-Werten:", length(p_value_below_corrected)))
+
+rueck_hist <- hist(myList$p_value, xlab="p-values", main="Histogram der p-Werte\n für den ABC & GCB Vergleich")
+myMedian <- median(rueck_hist$counts)
+abline(h=myMedian, col="blue")
+
+#false discovery rate
+fdr <- myMedian/rueck_hist$counts[1] 
+print(paste("False discovery rate:", round(100*fdr,3), "prozent"))
+```
+**Answer (2):**\
+For the Bonferroni-corrected method the standard p-value has to be divided by the number of comparisons in our test. Here we compare the average ABC-value with the average GCB-value for every gene, so the corrected p-value is: 0.05/ _number of genes_ = `r 0.05/dim(myData)[1]`. With the corrected p-value we have now only `r length(p_value_below_corrected)` genes below the cutoff. With the Bonferroni-corrected cutoff we would only expect 0.05/ _number of genes_ * _number of genes_ = 0.05 below the cutoff. That means that only in 5% of our `r dim(myData)[1]` comparisons we get one gene at all. So the fact that we have `r length(p_value_below_corrected)` genes below the cutoff means that there are a lot of significant genes. \
+The `median()` is more robust to outliers. For our determination of the horizontal cutoff, we want to more or less ignore the left side of the p-value cutoff. Therefore we choose `median()` to draw the false discovery cutoff. As we can see that the horizontal cutoff fits the right side of the p-value cutoff nicely.  
+
+**3. Compare lists of differentially expressed genes:**
+```{r D3, out.width = "70%"}
+p_func <- function(data, pheno_like, pheno1, pheno2) {
+  myData <- exprs(data)
+  myPheno <- pData(data)
+  
+  #GCBABC (ABC & GCB)
+  #MOLDIAG (mBL & non-mBL)
+  abc_index <- which(myPheno[,pheno_like] == pheno1) 
+  gcb_index <- which(myPheno[,pheno_like] == pheno2)
+  
+  myList = list(t_score=c(), p_value=c())
+  
+  for (i in 1:dim(myData)[1]) {
+    abc_samples <- myData[i,abc_index]
+    gcb_samples <- myData[i,gcb_index]
+    result <- t.test(abc_samples, gcb_samples)
+    myList$t_score[i] <- result$statistic
+    myList$p_value[i] <- result$p.value
+  }
+
+  p_value_below <- which(myList$p_value < 0.05)
+  print(paste("number of genes without bon. correction below p-value:", length(p_value_below)))
+  
+  p_value_below_corr <- which(myList$p_value < 0.05/dim(myData)[1])
+  print(paste("number of genes with bon. correction below p-value:", length(p_value_below_corr)))
+  
+
+  rueck_hist <- hist(myList$p_value, xlab="p-values", main=paste("comp. between", pheno1, "und", pheno2, "\nin", pheno_like, "trait"))
+  myMedian <- median(rueck_hist$counts)
+  abline(h=myMedian, col="blue")
+  
+  fdr <- myMedian/rueck_hist$counts[1]
+  print(paste("false discovery rate:", round(100*fdr,3), "prozent"))
+  
+  rueck_bool <- myList$p_value < 0.05 #mask
+  rueck_names <- row.names(myData)[rueck_bool] 
+  
+  return(list(rueck_bool, rueck_names))
+  
+}
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt9/mmml_vsn.rda")
+
+gcbabc_genes <- p_func(mmml.vsn, "GCBABC", "ABC", "GCB")
+burkit_genes <- p_func(mmml.vsn, "MOLDIAG", "mBL", "non-mBL")
+
+contingency_table <- table(gcbabc_genes[[1]], burkit_genes[[1]])
+contingency_table
+
+sign_genes_in_both <- intersect(gcbabc_genes[[2]], burkit_genes[[2]])
+length(sign_genes_in_both) #same as contingency_table[[4]] above
+```
+
+**Answer (3):**\
+We did the same comparisons now for the Burkit-like patients. For this procedure a function that returns a vector of all the genes below the p-value is suited. \
+The contingency table shows that a majority of genes that show a significant difference in the ABC & GCB comparison also show a significant difference in the mBL & non-mBL comparison. Whereas if they do not show said significances in one comparison they also do not show it in the other. Therefore the traits GCBABC and MOLDIAG are positively correlated. \
+In order to see the names of the genes that are significant in both comparisons we would have to `print()` out the vector `sign_genes_in_both`.
+
+Information about the used R and package versions
+-------------------------------------------------
+
+The used versions of R and packages to generate the report above are
+the following:
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+

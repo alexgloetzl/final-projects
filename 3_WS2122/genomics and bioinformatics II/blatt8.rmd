@@ -1,0 +1,121 @@
+---
+title: Simulation exercise in<br />**Genomik und Bioinformatik**
+output: html_document
+---
+
+```{r simulation_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=5, fig.height=5, fig.path='RmdFigs/', dpi=72,
+               warning=FALSE, message=FALSE, prompt=TRUE, cache=TRUE)
+```
+
+Part D) Programming - Classifcation with cross-validation
+-----------------------------
+**1. Load the data:**
+
+```{r D1}
+library(glmnet)
+
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt12/lenz.rda")
+#pdat #mat
+
+data_high <- which(pdat$risk == "high")
+data_low <- which(pdat$risk == "low")
+cat("number of high risk samples:",length(data_high), "\nnumber of low risk samples:", length(data_low))
+
+cat("Error rate by 'larger class' classifier:", min(length(data_high), length(data_low))/(length(data_high)+length(data_high)))
+
+cleaned_pdat <- pdat[!is.na(pdat$risk),]
+cleaned_mat <- mat[!is.na(pdat$risk),]
+```
+**Answer 1:**\
+Some samples had an unspecified risk parameter. Those were excluded from the data.
+
+**2. Prepare $\lambda$-sequence: use `glmnet::glmnet:`**
+```{r D2}
+#split data into 90% train & 10% test data
+percentage <- 0.9
+numb_samples <- dim(cleaned_mat)[1]
+numb_genes <- dim(cleaned_mat)[2]
+
+train_index <- sample(1:numb_samples, floor(percentage*numb_samples))
+train_index_ordered <- train_index[order(train_index, decreasing=FALSE)]
+train <- cleaned_mat[train_index_ordered,]
+train_pData <- cleaned_pdat[train_index_ordered,]
+
+test_index <- c(1:numb_samples)[-train_index]
+test_index_ordered <- test_index[order(test_index, decreasing=FALSE)]
+test <- cleaned_mat[test_index_ordered,]
+test_pData <- cleaned_pdat[test_index_ordered,]
+
+alpha.fit <- 
+  glmnet(train, train_pData$risk, type.measure="mse", alpha=1, family="binomial")
+```
+
+**Answer 2:**\
+Before using the `glmnet` function to fit our classification model for 100 different values of $\lambda$, we divide our data into training \& test data. The following exercises, namely cross-validation, were performed on the training data set.
+
+**3. Evaluate model performance:**
+```{r D3}
+nfolds <- 10
+foldNr <- rep(1:nfolds, times=nrow(train) %/% nfolds) 
+foldNr2 <- sample(foldNr, size=length(foldNr), replace=FALSE)
+
+errors <- rep(0, times=100)
+for (f in 1:nfolds){
+  s <- which(foldNr2 == f)
+  classifier <- 
+    glmnet(train[-s,], train_pData[-s,]$risk, type.measure="mse", alpha=1, family="binomial", lambda=alpha.fit$lambda)
+  
+  prediction <- predict(classifier, newx=train[s,], type='class')
+  
+  for (i in 1:ncol(prediction)){
+    errors[i] <- errors[i] + sum(train_pData[s,]$risk != prediction[,i])
+  }
+  
+}
+errors_final <- errors/length(foldNr)
+min_error_ind <- order(errors_final, decreasing=FALSE)[1]
+min_error <- errors_final[min_error_ind]
+
+multiple_ind <- min(which(errors_final == min_error)) #picks index with higher lambda/regularization
+
+cat("opt. lambda:", alpha.fit$lambda[multiple_ind],"\ndf(k=",multiple_ind,"):",alpha.fit$df[multiple_ind], "\nerror:",min_error)
+
+```
+
+**Answer 3:**\
+The advantage of cross-validation in comparison to a regular validation set is that you can achieve good training with not many data points by "reusing" parts of your data again and again.
+
+**Answer 4:**\
+Not using the same lambdas for different folds of the cross-validation would mean that the folds are not comparable to each other. By using the same lambdas for all folds the comparison becomes easier. (For example one could imagine picking the lambda with the lowest error rate of all the folds. But how does this lambda compare to a slightly different lambda of a different fold, where the error rate is nearly the same but has less non-zero coefficients. Which lambda is really better?) \
+
+**5. Evaluate model performance:**
+```{r D5, set.seed(3)}
+#set.seed(3) #seed set in r-markdown chunk
+alpha.fit_cross <- 
+  cv.glmnet(train, train_pData$risk, type.measure="class", alpha=1, family="binomial")
+
+cat("opt. lambda (cv.glmnet):", alpha.fit_cross$lambda.min,"\ndf(k=",alpha.fit_cross$index[1],"):",alpha.fit_cross$nzero[alpha.fit_cross$index[1]], "\nerror:", alpha.fit_cross$cvm[alpha.fit_cross$index[1]])
+```
+**Answer 5:**\
+In exercise 5 we used the built-in function `cv.glmnet`. The error in `alpha.fit_cross` for the lambda with the minimal error rate is listed in _Measure_ as `r alpha.fit_cross$cvm[alpha.fit_cross$index[1]]`.
+
+**Answer 6:**\
+The best lambda acquired through cross-validation is probably not exactly correct. The corresponding error was likely underestimated than overestimated (regression to the mean). The error-rate for a completely new, unknown test data set would likely be higher.
+
+
+
+Information about the used R and package versions
+-------------------------------------------------
+
+The used versions of R and packages to generate the report above are
+the following:
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+
+
+

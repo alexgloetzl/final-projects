@@ -1,0 +1,147 @@
+---
+title: Simulation exercise in<br />**Genomik und Bioinformatik**
+output: html_document
+---
+
+```{r simulation_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.width=5, fig.height=5, fig.path='RmdFigs/', dpi=72,
+               warning=FALSE, message=FALSE, prompt=TRUE, cache=FALSE)
+set.seed(53079239)
+```
+
+Part D) Programming - Consensus clustering
+-----------------------------
+**1. Have a look at the data to be clustered:**
+
+```{r D1}
+library(vsn)
+library(affy)
+load(file= "C:/Users/aleX/Kurse/genomik/Blatt8/mmml_subset.rda")
+
+myExpr <- exprs(mmml.subset)
+str(myExpr) #22283 genes #50 samples
+
+variable <- apply(myExpr, 1, sd)
+N <- 500
+most_variable_index <- order(variable, decreasing=TRUE)[1:N]
+myData <- myExpr[most_variable_index,]
+str(myData)
+```
+
+**2. Planning the implementation of consensus clustering with hclust:**
+
+**Answer (2a):**\
+**Parameter/ Typ:**\
+Daten/ Matrix\
+Anzahl d. Cluster/ Integer\
+Anzahl d. Durchgänge/ Integer\
+Prozent/ Float\
+
+**Answer (2b):**\
+Dimensionen der Matrix: "Anzahl d. Sample" x "Anzahl d. Sample" (also dim(M)=50x50).\
+Wenn jedem Element der Matrix ein Wert zugewiesen wird, abhängig davon wie weit dieser Wert von `0.5` entfernt ist, kann so Maß für die Wechselwahrscheinlichkeit jede Probe ermittelt werden (`rowMeans()`). Dabei ist mit Wechselwahrscheinlichkeit gemeint, dass eine Probe bei verschiedenen Durchläufen des Clusterns zu unterschiedlichen Clustern zugewiesen wird.
+
+**3. Implement consensus clustering with hclust based on the following algorithm:**
+
+Der komplette Algorithmus wird hier zwecks Übersicht im Stück präsentiert:
+
+```{r D3}
+consensus <- function(data, k_clusters=3, k_run=10, p=0.8){
+  set.seed(3)
+  N_sample <- dim(data)[2]
+  sub.mat_rows <- floor(p*N_sample)
+
+  consensus_k <- matrix(0, nrow=N_sample, ncol=N_sample) 
+  row.names(consensus_k) <- colnames(data)
+  freq_k <- matrix(1e-10, nrow=N_sample, ncol=N_sample)
+  row.names(freq_k) <- colnames(data)
+  
+  for (k in 1:k_run){
+    sub.mat_index <- sample.int(N_sample, sub.mat_rows)
+    
+    sub.mat <- data[,sub.mat_index]
+    gene_dist <- dist(t(sub.mat))
+    gene_hclust <- hclust(gene_dist, method = "complete")
+    clusters <- cutree(gene_hclust, k_clusters)
+    
+    for (c in 1:k_clusters){
+      full_index <- sub.mat_index[c == clusters]
+      consensus_k[full_index, full_index] <- consensus_k[full_index, full_index] + 1
+    }
+    
+    freq_k[sub.mat_index, sub.mat_index] <- freq_k[sub.mat_index, sub.mat_index] + 1
+    
+  }
+  
+  consensus_final <- consensus_k/freq_k
+  toggle_prob <- c()
+  toggle_matrix <- matrix(0, nrow=N_sample, ncol=N_sample)
+  for (i in 1:N_sample) {
+    for (j in 1:N_sample) {
+      toggle_matrix[i,j] <- 0.5 - abs(0.5-consensus_final[i,j])
+    }
+    
+    toggle_prob[i] <- sum(toggle_matrix[i,])/N_sample
+  }
+  
+  return (list(consensus_final, toggle_prob))
+  
+}
+```
+**Answer (3):**\
+`dist()`: erzeugt die Distanz-Matrix (wegen Symmetrie wird nur obere/untere "Ecke" ausgegeben).\
+`hclust()`: erzeugt Cluster-Object (Dendrogram kann mit `plot(hclust())` erzeugt werden).\
+`cutree(tree, k=NULL)`: Teilt das Cluster-Object in die gewollte Anzahl an Clustern ein (gegeben durch k).
+
+**4. Performing consensus clustering:**
+
+```{r D4, out.width = "70%"}
+consensus_list <- list()
+toggle_list <- list()
+clusters_max <- 4
+par(mar=c(1,5,2,2))
+par(mfrow=c(clusters_max-1,1))
+
+for (i in 2:clusters_max){
+  results <- consensus(myData, k_clusters=i, k_run=100)
+  consensus_list[[i-1]] <- results[[1]]
+  toggle_list[[i-1]] <- results[[2]]
+  
+  image(1:ncol(results[[1]]), 1:nrow(results[[1]]), t(results[[1]])[,nrow(results[[1]]):1], axes=FALSE, xlab="", ylab="", main=paste(toString(i), "clusters"))
+  axis(2, at = 1:nrow(results[[1]]), labels=rev(rownames(results[[1]])),las=2,tick=FALSE)
+}
+```
+
+**Answer (4a):** Stabile Proben sind durch die beiden Extremen Enden des Farbspektrums gekennzeichnet. In diesem Fall sind das rot und weiß. Unstabile Proben sind demnach orange gefärbt. 
+
+**Answer (4b):** Für zwei Cluster sieht die Heatmap am besten aus, da dort die Anzahl an orangenen Proben minimal ist. Für zwei Cluster sind fast keine Proben unstabil. Setzt man den Grenzwert auf 0.3 (wobei 0 sehr gut und 0.5 sehr schlecht wäre), so ist nur eine Probe darüber ("MPI-051").\
+Mit zwei Clustern ergibt die Analyse der Phenodaten, dass Cluster 1 nur aus dem GCB Subtyp, hauptsächlich aus Frauen und keine merkliche Altersverteilung besitzt. Der Zweite Cluster zeichnet sich dadurch aus, dass er 2.5-fach so viele ABC wie GCB Subtypen  besitzt, eher bei Männern als bei Frauen und am häufigsten im Alter zwischen 60 und 79 Jahren aufkommt.
+
+```{r D4b}
+toggle_2 <- toggle_list[[1]] #2 cluster
+unstable_2 <- which(toggle_2 > 0.30)
+rownames(consensus_list[[1]])[unstable_2]
+
+
+sample_dist <- dist(t(myData))
+sample_hclust <- hclust(sample_dist, method = "complete")
+clusters <- cutree(sample_hclust, 2)
+myPheno <- pData(mmml.subset)
+
+table(clusters, myPheno$GCBABC) 
+table(clusters, myPheno$GENDER)
+cut_ages <- cut(myPheno$AGE, breaks=seq(0,100,10), right = FALSE)
+table(cut_ages, clusters)
+```
+
+Information about the used R and package versions
+-------------------------------------------------
+
+The used versions of R and packages to generate the report above are
+the following:
+
+```{r sessionInfo}
+sessionInfo()
+```
+
