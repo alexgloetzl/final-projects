@@ -38,3 +38,5 @@
 **Summer term SS23:**
 - Statistic Bioinformatics seminar:
   - 30 minute presentation about adjusting for batch bias with the Distance Weighted Discriminant algorithm
+- Creating lecture about UMAP algorithm for students including exercises:
+  - 10 minute status report (work in progress)
