@@ -1,3 +1,4 @@
 Genomics\ and\ Bioinformatics\ II/* linguist-vendored
 *.html linguist-detectable=false
 *.mlx linguist-detectable=false
+*.mat linguist-detectable=false
