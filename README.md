@@ -39,6 +39,6 @@
 - Statistic Bioinformatics seminar:
   - 30 minute presentation about adjusting for batch bias with the Distance Weighted Discriminant algorithm
 - Practical bioinformatics II:
-  - creating lecture about UMAP algorithm for students including exercises (work in progress)
+  - creating lecture about dimensionality reduction UMAP algorithm for students including exercises
 - Machine Learning and Deep Learning with R
   - week-long seminar: overview over most relevant machine learning methods and implementation of deep learning algorithms with tensorflow/keras
