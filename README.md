@@ -27,7 +27,7 @@
 - Practical bioinformatics I:
   - Convolutional Neural Network with clinical data sets from the UKR
 
-**Summer term WS22/23:**
+**Winter term WS22/23:**
 - Microcontroller course:
   - final project: implementation of infrared remote controlled car by Arduino written in C
 - Algorithmic Bioinformatics seminar:
