@@ -42,3 +42,9 @@
   - creating lecture about dimensionality reduction UMAP algorithm for students including exercises
 - Machine Learning and Deep Learning with R
   - week-long seminar: overview over most relevant machine learning methods and implementation of deep learning algorithms with tensorflow/keras
+
+**Winter term WS23/24:**
+- Ethical Hacking and Cyber Range Training:
+  - learning about computer security, hacking tools and exploits by solving CTFs
+- Bachelor thesis "Feature subsetting with LASSO ensembles":
+  - comparison of predictability between LASSO ensembles and single models
