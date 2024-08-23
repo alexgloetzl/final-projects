@@ -48,3 +48,9 @@
   - learning about computer security, hacking tools and exploits by solving CTFs
 - Bachelor thesis "Feature subsetting with LASSO ensembles":
   - comparison of predictability between LASSO ensembles and single models
+
+**Summer term SS24:**
+- Bachelor thesis: LASSO Ensembles
+  - analysis about why classic LASSO models sometimes fail and how to solve this challenge by implementing LASSO ensembles
+- Molecular dynamics:
+  - Simulation of physical properties on an atomic level with exercises in GROMACS
