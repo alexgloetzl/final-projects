@@ -52,3 +52,7 @@
   - analysis about why classic LASSO models sometimes fail and how to solve this challenge by implementing LASSO ensembles
 - Molecular Dynamics:
   - simulation of physical properties on an atomic level with exercises in GROMACS
+
+**Winter term WS24/25:**
+- Group seminar talk:
+  - Overview of outlier detection algorithms with focus on Isolation Forest
