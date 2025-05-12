@@ -2,6 +2,8 @@
 **Winter term WS20/21:**
 - Introduction to python:
   - final project: repeated integration of a function with Romberg's method by interpolation
+- Mechanic-CAD (Computer Assisted Design):
+  - final project: 3D construction and assembly of seven single parts to form a crankshaft
 - Numerical recipies:
   - final project: calculation of eigenstates and eigenvalues of a 2D quantum harmonic oscillator with arpack
   
@@ -56,3 +58,7 @@
 **Winter term WS24/25:**
 - Group seminar talk:
   - Overview of outlier detection algorithms with focus on Isolation Forest
+
+**Summer term SS25:**
+- Started master thesis:
+  - Goal: validation and prediction of semiconductor data
