@@ -3,7 +3,7 @@
 - Introduction to python:
   - final project: repeated integration of a function with Romberg's method by interpolation
 - Mechanic-CAD (Computer Assisted Design):
-  - final project: 3D construction and assembly of seven single parts to form a crankshaft
+  - final project: 3D construction and assembly of seven single parts to form a crankshaft in SolidWorks
 - Numerical recipies:
   - final project: calculation of eigenstates and eigenvalues of a 2D quantum harmonic oscillator with arpack
   
