@@ -52,7 +52,7 @@
 **Summer term SS24:**
 - Bachelor thesis: LASSO Ensembles
   - analysis about why classic LASSO models sometimes fail and how to solve this challenge by implementing LASSO ensembles
-- Molecular Dynamics:
+- Molecular Dynamics lecture:
   - simulation of physical properties on an atomic level with exercises in GROMACS
 
 **Winter term WS24/25:**
@@ -60,5 +60,7 @@
   - Overview of outlier detection algorithms with focus on Isolation Forest
 
 **Summer term SS25:**
+- Group seminar talk:
+  - Overview of how to deal with missing data featuring MICE algorithm
 - Started master thesis:
   - Goal: validation and prediction of semiconductor data
