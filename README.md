@@ -62,5 +62,7 @@
 **Summer term SS25:**
 - Group seminar talk:
   - Overview of how to deal with missing data featuring MICE algorithm
-- Started master thesis:
-  - Goal: validation and prediction of semiconductor data
+
+**Winter term WS25/26:**
+- master thesis:
+  - "Validate and predict semiconductor production data". Validation by outlier detection and prediction with uncertainty quantification using Bayesian Inference
